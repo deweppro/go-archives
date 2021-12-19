@@ -67,7 +67,8 @@ func (v buffer) Read(k kind, d interface{}) error {
 		return errInvalidParseValue
 	}
 
-	data := strings.TrimRight(string(v[k.From:k.From+k.Len]), " ")
+	data := strings.TrimRight(string(v[k.From:k.From+k.Len]), " /")
+
 	if len(k.Prefix) > 0 {
 		data = strings.TrimPrefix(data, k.Prefix)
 	}
@@ -89,7 +90,7 @@ func (v buffer) Read(k kind, d interface{}) error {
 }
 
 const (
-	headSize int = 60
+	HEAD_SIZE int = 60
 )
 
 type Header struct {
@@ -100,7 +101,7 @@ type Header struct {
 }
 
 func (v *Header) Bytes() ([]byte, error) {
-	data := newBuffer(headSize)
+	data := newBuffer(HEAD_SIZE)
 
 	list := map[kind]interface{}{
 		fileName: v.FileName,
