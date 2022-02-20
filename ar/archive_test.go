@@ -83,7 +83,7 @@ func TestUnit_ArchiveCreate(t *testing.T) {
 	require.NoError(t, fd0.Write("file2", []byte("file2 text"), os.ModePerm))
 	require.Error(t, fd0.Write("file2", []byte("file2 text!"), os.ModePerm))
 	require.NoError(t, os.WriteFile("/tmp/ddddd.txt", []byte("ddddd file"), fs.ModePerm))
-	require.NoError(t, fd0.Import("/tmp/ddddd.txt"))
+	require.NoError(t, fd0.Import("/tmp/ddddd.txt", 0))
 	fd0.Close()
 
 	fd0, err = ar.Open("/tmp/demo1.ar", os.ModePerm)
