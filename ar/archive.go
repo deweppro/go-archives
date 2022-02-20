@@ -143,7 +143,7 @@ func (v *Arch) Export(filename, dir string) error {
 	return v.Read(filename, file)
 }
 
-func (v *Arch) Import(filename string) error {
+func (v *Arch) Import(filename string, perm fs.FileMode) error {
 	v.mux.Lock()
 	defer v.mux.Unlock()
 
@@ -165,10 +165,14 @@ func (v *Arch) Import(filename string) error {
 		return err
 	}
 
+	if perm == 0 {
+		perm = stat.Mode()
+	}
+
 	h := &Header{
 		FileName:  stat.Name(),
 		Timestamp: stat.ModTime().Unix(),
-		Mode:      int64(stat.Mode()),
+		Mode:      int64(perm),
 		Size:      stat.Size(),
 	}
 	hb, err := h.Bytes()
