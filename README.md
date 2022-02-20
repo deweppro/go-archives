@@ -11,6 +11,10 @@
 go get -u github.com/deweppro/go-archives
 ```
 
+## Archives
+
+* ar (Unix) - https://en.wikipedia.org/wiki/Ar_(Unix)
+
 ## License
 
 BSD-3-Clause License. See the LICENSE file for details.
