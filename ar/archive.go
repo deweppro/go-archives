@@ -52,19 +52,6 @@ func (v *Arch) List() []Header {
 	return nh
 }
 
-func (v *Arch) Export(filename, dir string) error {
-	if err := os.MkdirAll(dir, fs.ModePerm); err != nil {
-		return err
-	}
-	file, err := os.OpenFile(strings.TrimRight(dir, "/")+"/"+filename, os.O_RDWR|os.O_SYNC|os.O_CREATE, fs.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	return v.Read(filename, file)
-}
-
 func (v *Arch) Read(filename string, w io.Writer) error {
 	v.mux.RLock()
 	defer v.mux.RUnlock()
@@ -82,7 +69,6 @@ func (v *Arch) Read(filename string, w io.Writer) error {
 	var ii int64
 
 	for {
-		fmt.Println("max", max)
 		if max == 0 {
 			return nil
 		}
@@ -144,6 +130,19 @@ func (v *Arch) Write(filename string, b []byte, perm fs.FileMode) error {
 	return nil
 }
 
+func (v *Arch) Export(filename, dir string) error {
+	if err := os.MkdirAll(dir, fs.ModePerm); err != nil {
+		return err
+	}
+	file, err := os.OpenFile(strings.TrimRight(dir, "/")+"/"+filename, os.O_RDWR|os.O_SYNC|os.O_CREATE, fs.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return v.Read(filename, file)
+}
+
 func (v *Arch) Import(filename string) error {
 	v.mux.Lock()
 	defer v.mux.Unlock()
@@ -180,7 +179,7 @@ func (v *Arch) Import(filename string) error {
 		return err
 	}
 
-	if _, err := io.Copy(v.fd, file); err != nil {
+	if _, err = io.Copy(v.fd, file); err != nil {
 		return err
 	}
 
