@@ -9,18 +9,18 @@ import (
 
 func TestUnit_NewBuffer(t *testing.T) {
 	demo := []byte("hello.go        123456      0     0     100777  999       `\n")
-	h1 := &ar.Header{
+	h := &ar.Header{
 		FileName:  "hello.go",
 		Timestamp: 123456,
 		Size:      999,
 		Mode:      0777,
 	}
-	b, err := h1.Bytes()
+	b, err := h.Bytes()
 	require.NoError(t, err)
 	require.Equal(t, demo, b)
 
 	h2 := &ar.Header{}
 	require.NoError(t, h2.Parse(demo))
 
-	require.Equal(t, h1, h2)
+	require.Equal(t, h, h2)
 }

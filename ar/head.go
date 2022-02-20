@@ -4,14 +4,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
-)
-
-var (
-	errTooLongValue      = errors.New("too long value")
-	errUnsupportedValue  = errors.New("unsupported value")
-	errInvalidParseValue = errors.New("parsing error")
 )
 
 type kind struct {
@@ -51,11 +43,11 @@ func (v buffer) Write(k kind, d interface{}) error {
 	case int64:
 		data = []byte(k.Prefix + strconv.FormatInt(vv, k.Base))
 	default:
-		return errUnsupportedValue
+		return ErrUnsupportedValue
 	}
 
 	if len(data) > k.Len {
-		return errTooLongValue
+		return ErrTooLongValue
 	}
 	copy(v[k.From:k.From+k.Len], data)
 	return nil
@@ -64,7 +56,7 @@ func (v buffer) Write(k kind, d interface{}) error {
 func (v buffer) Read(k kind, d interface{}) error {
 	rv := reflect.ValueOf(d)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return errInvalidParseValue
+		return ErrInvalidParseValue
 	}
 
 	data := strings.TrimRight(string(v[k.From:k.From+k.Len]), " /")
@@ -86,13 +78,15 @@ func (v buffer) Read(k kind, d interface{}) error {
 		return nil
 	}
 
-	return errInvalidParseValue
+	return ErrInvalidParseValue
 }
 
-const (
-	HEAD_SIZE int = 60
-)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//HEAD_SIZE default size for meta data of contained files
+const HEAD_SIZE int = 60
+
+//Header meta data of contained files
 type Header struct {
 	FileName  string
 	Timestamp int64
@@ -100,6 +94,7 @@ type Header struct {
 	Size      int64
 }
 
+//Bytes make string from Header model
 func (v *Header) Bytes() ([]byte, error) {
 	data := newBuffer(HEAD_SIZE)
 
@@ -122,6 +117,7 @@ func (v *Header) Bytes() ([]byte, error) {
 	return []byte(data), nil
 }
 
+//Parse decode string to Header model
 func (v *Header) Parse(b []byte) error {
 	vv := buffer(b)
 
