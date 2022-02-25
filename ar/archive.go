@@ -187,7 +187,7 @@ func (v *Arch) Import(filename string, perm fs.FileMode) error {
 		return err
 	}
 
-	v.correctSize(h.Size, func() { _, err = v.fd.Write(hb) })
+	v.correctSize(h.Size, func() { _, err = v.fd.Write(newline) })
 	if err != nil {
 		return err
 	}
