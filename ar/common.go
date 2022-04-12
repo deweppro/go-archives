@@ -1,6 +1,6 @@
 package ar
 
-import "github.com/pkg/errors"
+import "github.com/deweppro/go-errors"
 
 var (
 	signeture  = []byte("!<arch>\n")
