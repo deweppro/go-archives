@@ -1,7 +1,13 @@
+/*
+ *  Copyright (c) 2021-2023 Mikhail Knyazhev <markus621@yandex.ru>. All rights reserved.
+ *  Use of this source code is governed by a BSD 3-Clause license that can be found in the LICENSE file.
+ */
+
 package ar
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -138,7 +144,7 @@ func (v *Arch) Export(filename, dir string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	return v.Read(filename, file)
 }
@@ -208,7 +214,7 @@ func (v *Arch) correctSize(size int64, callFunc func()) {
 func (v *Arch) rwSignature() error {
 	data := make([]byte, len(signeture))
 	i, err := v.fd.Read(data)
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return err
 	}
 
@@ -229,7 +235,7 @@ func (v *Arch) readAllHeaders() error {
 	data := make([]byte, HEAD_SIZE)
 	for {
 		_, err := v.fd.Read(data)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return nil
 		}
 		if err != nil {
