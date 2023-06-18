@@ -1,3 +1,8 @@
+/*
+ *  Copyright (c) 2021-2023 Mikhail Knyazhev <markus621@yandex.ru>. All rights reserved.
+ *  Use of this source code is governed by a BSD 3-Clause license that can be found in the LICENSE file.
+ */
+
 package ar_test
 
 import (
@@ -5,18 +10,34 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/deweppro/go-archives/ar"
+	"github.com/osspkg/go-archives/ar"
 	"github.com/stretchr/testify/require"
 )
 
-const demoDeb = `ITxhcmNoPgpkZWJpYW4tYmluYXJ5ICAgMTY0NTMxODYwMSAgMCAgICAgMCAgICAgMTAwNjQ0ICA0ICAgICAgICAgYAoyLjAKY29udHJvbC50YXIuZ3ogIDE2NDUzMTg2MDEgIDAgICAgIDAgICAgIDEwMDY0NCAgNzEzICAgICAgIGAKH4sIAAAAAAAA/+yYz27bNhjAfeZTcNl1lkj9tbVh2IActsOAAMF2p6hPMTH9A0m3TU9tX6DHHvsK7p8AQYo4r0C/USHHbWOlrYG2kpGWvwsFEtRH8cOPH23HHfUOIYTEYbhuCSHddv1MA48EPiUxpSNCYj/2Rjjsf2mj0VxpJkeEfO17uh93R3DcMgvVvFQ9xmj3IwqCT+afRuF2/tsmGOFBNvEHzz+bkDCfAqd0SqaT6SSjNMtjEnACE+6RDGPQ3E1Tl9dVLk6cU1YWiPIQAhb4EzbxacrCOPNozOOcEvAhejdJnSoNZbZp3TR1FMh7ggPa90db3uO0idWyLnqMscv/kES3/I8j6/8QHDH+PzuBBKcpOq7nkl8//gdSibpKMHGIQ9Gfks+EBq7nEhLMyiwK0D9MVJqJCmSC/1Ug8W9zBfIPeMDKpgCH1+Xv6O9KaVYUkI2PxUNIMEWH0ECVqQRvTodfMGdjDlKLXHCmQaFj4Hod+j6k6EiKWgp9muC6aXtZgf6qS2jWS55p3ajEdW+EdNEhKC5Fc/0K88wszCuzNG/M0rw0S3OBzdJcmfPVY7Mwl+Z89RSbK7MwF+Zs9cQsMMIOwua5WZrXq0dmaV6YS7M0Z51ZbcfWrH1n8ctZ+5/nooD+bgC7/Cde0PGfehG1/g+B+5Hyvu81WYbDcRsJolK6xxi7/PdCr+t/O2z9H4Cff3JTUbkpUzOERI41KI3HOT5wP3uFP/gV6xlUCGO8qeRcF1jpumlvD9u9mVAsLaAd6I4wKOtqLKGoWdYZk6BAj3MmCshQLpA9lXrBcZta6X4PgJ31P/K7/tM4tv4PwZb/N01mUrfGfuiCamPxvpds+Yas678se42xu/6T7u//wLf+D8Jdqf/73qfvlev63+8BsLP+01v//0d+aP0fgi3/970Yi8VisQzG2wAAAP//+kw+rgAiAAAKZGF0YS50YXIuZ3ogICAgIDE2NDUzMTg2MDEgIDAgICAgIDAgICAgIDEwMDY0NCAgNDczICAgICAgIGAKH4sIAAAAAAAA/+yWQWvbMBSAfdav0B+o/RTH8TD4sEEpZfTStOwQcpCtF1dMkYL0nC7/fiRmgYVAyRZ76+YvBwlJRNb7nv0UJ1HvAADkWXZoAeC0PfTFdALTVEAuRASQp/kk4ln/jxZFbSDpI4Df/Z/Tw70T4gSp7jkHLvYvQEyz0f8QdP6rqs8U+AX/WQqj/yE4+q+dXekm3sm1ufYeb/kX+fToP8sgAjGZzfKIDxLE/9w/2m3BFW4ZM64peKJwmwRSriVmcIum4CljL0SbgnEulfIFh/jwKwTAB2AKq7Y5MznZT7K1Vsrgq/S4X0Iv3hEZbZuCp+8nRv8y3fsfdoFwrXoqApd//8UsHev/IPzsv2uvnQaX+0/FTIz+h+Cs/6qKA/qtrvEqe7zlP83ESf3PRCrG+j8Ei2erack+rgh9aZFenf8ak/QNEmOLeZcFS/Yc0JfeOWJ33rWbrvuI+9hR6ezNSmrTevwxNMe6TCGwp90Gy6DXG4Ps9hvW88P6pA0+qbRNqor71vKbm+7yWZ65i7LP2pgHp7DceFdjCIeBuW6sNOX8/u7p9vGBscW9DSSNWbIv0hKqT7tS4Uq2ho5n+dOBHhkZGfnL+B4AAP//x5J3eQAWAAAK`
+const demoDeb = "ITxhcmNoPgpkZWJpYW4tYmluYXJ5ICAgMTY0NTMxODYwMSAgMCAgICAgMCAgICAgMTAwNjQ0ICA0ICAgICAgICAgYAoyLjAKY29" +
+	"udHJvbC50YXIuZ3ogIDE2NDUzMTg2MDEgIDAgICAgIDAgICAgIDEwMDY0NCAgNzEzICAgICAgIGAKH4sIAAAAAAAA/+yYz27bNhjAfeZTcNl1lkj" +
+	"9tbVh2IActsOAAMF2p6hPMTH9A0m3TU9tX6DHHvsK7p8AQYo4r0C/USHHbWOlrYG2kpGWvwsFEtRH8cOPH23HHfUOIYTEYbhuCSHddv1MA48EPi" +
+	"UxpSNCYj/2Rjjsf2mj0VxpJkeEfO17uh93R3DcMgvVvFQ9xmj3IwqCT+afRuF2/tsmGOFBNvEHzz+bkDCfAqd0SqaT6SSjNMtjEnACE+6RDGPQ3E" +
+	"1Tl9dVLk6cU1YWiPIQAhb4EzbxacrCOPNozOOcEvAhejdJnSoNZbZp3TR1FMh7ggPa90db3uO0idWyLnqMscv/kES3/I8j6/8QHDH+PzuBBKcpOq" +
+	"7nkl8//gdSibpKMHGIQ9Gfks+EBq7nEhLMyiwK0D9MVJqJCmSC/1Ug8W9zBfIPeMDKpgCH1+Xv6O9KaVYUkI2PxUNIMEWH0ECVqQRvTodfMGdjDlK" +
+	"LXHCmQaFj4Hod+j6k6EiKWgp9muC6aXtZgf6qS2jWS55p3ajEdW+EdNEhKC5Fc/0K88wszCuzNG/M0rw0S3OBzdJcmfPVY7Mwl+Z89RSbK7MwF+Zs" +
+	"9cQsMMIOwua5WZrXq0dmaV6YS7M0Z51ZbcfWrH1n8ctZ+5/nooD+bgC7/Cde0PGfehG1/g+B+5Hyvu81WYbDcRsJolK6xxi7/PdCr+t/O2z9H4Cff" +
+	"3JTUbkpUzOERI41KI3HOT5wP3uFP/gV6xlUCGO8qeRcF1jpumlvD9u9mVAsLaAd6I4wKOtqLKGoWdYZk6BAj3MmCshQLpA9lXrBcZta6X4PgJ31P/K" +
+	"7/tM4tv4PwZb/N01mUrfGfuiCamPxvpds+Yas678se42xu/6T7u//wLf+D8Jdqf/73qfvlev63+8BsLP+01v//0d+aP0fgi3/970Yi8VisQzG2wAAA" +
+	"P//+kw+rgAiAAAKZGF0YS50YXIuZ3ogICAgIDE2NDUzMTg2MDEgIDAgICAgIDAgICAgIDEwMDY0NCAgNDczICAgICAgIGAKH4sIAAAAAAAA/+yWQW" +
+	"vbMBSAfdav0B+o/RTH8TD4sEEpZfTStOwQcpCtF1dMkYL0nC7/fiRmgYVAyRZ76+YvBwlJRNb7nv0UJ1HvAADkWXZoAeC0PfTFdALTVEAuRASQp/" +
+	"kk4ln/jxZFbSDpI4Df/Z/Tw70T4gSp7jkHLvYvQEyz0f8QdP6rqs8U+AX/WQqj/yE4+q+dXekm3sm1ufYeb/kX+fToP8sgAjGZzfKIDxLE/9w/2m3" +
+	"BFW4ZM64peKJwmwRSriVmcIum4CljL0SbgnEulfIFh/jwKwTAB2AKq7Y5MznZT7K1Vsrgq/S4X0Iv3hEZbZuCp+8nRv8y3fsfdoFwrXoqApd//8U" +
+	"sHev/IPzsv2uvnQaX+0/FTIz+h+Cs/6qKA/qtrvEqe7zlP83ESf3PRCrG+j8Ei2erack+rgh9aZFenf8ak/QNEmOLeZcFS/Yc0JfeOWJ33rWbrvu" +
+	"I+9hR6ezNSmrTevwxNMe6TCGwp90Gy6DXG4Ps9hvW88P6pA0+qbRNqor71vKbm+7yWZ65i7LP2pgHp7DceFdjCIeBuW6sNOX8/u7p9vGBscW9DSSN" +
+	"WbIv0hKqT7tS4Uq2ho5n+dOBHhkZGfnL+B4AAP//x5J3eQAWAAAK"
 
 func setUp(filename string, data string) error {
 	bin, err := base64.StdEncoding.DecodeString(data)
@@ -24,7 +45,7 @@ func setUp(filename string, data string) error {
 		return fmt.Errorf("base64 decode: %w", err)
 	}
 
-	return ioutil.WriteFile(filename, bin, fs.ModePerm)
+	return os.WriteFile(filename, bin, fs.ModePerm)
 }
 
 func TestUnit_ArchiveRead(t *testing.T) {
@@ -60,7 +81,7 @@ func TestUnit_ArchiveRead(t *testing.T) {
 		l := make([]string, 0)
 		for {
 			hdr, err := fd3.Next()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return l
 			}
 			if err != nil {
@@ -70,7 +91,8 @@ func TestUnit_ArchiveRead(t *testing.T) {
 		}
 	}()
 
-	require.Equal(t, []string{"./", "./md5sums", "./control", "./conffiles", "./preinst", "./postinst", "./prerm", "./postrm"}, list)
+	require.Equal(t, []string{"./", "./md5sums", "./control",
+		"./conffiles", "./preinst", "./postinst", "./prerm", "./postrm"}, list)
 }
 
 func TestUnit_ArchiveCreate(t *testing.T) {

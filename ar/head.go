@@ -1,3 +1,8 @@
+/*
+ *  Copyright (c) 2021-2023 Mikhail Knyazhev <markus621@yandex.ru>. All rights reserved.
+ *  Use of this source code is governed by a BSD 3-Clause license that can be found in the LICENSE file.
+ */
+
 package ar
 
 import (
@@ -83,10 +88,10 @@ func (v buffer) Read(k kind, d interface{}) error {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//HEAD_SIZE default size for meta data of contained files
+// HEAD_SIZE default size for meta data of contained files
 const HEAD_SIZE int = 60
 
-//Header meta data of contained files
+// Header meta data of contained files
 type Header struct {
 	FileName  string
 	Timestamp int64
@@ -94,7 +99,7 @@ type Header struct {
 	Size      int64
 }
 
-//Bytes make string from Header model
+// Bytes make string from Header model
 func (v *Header) Bytes() ([]byte, error) {
 	data := newBuffer(HEAD_SIZE)
 
@@ -117,7 +122,7 @@ func (v *Header) Bytes() ([]byte, error) {
 	return []byte(data), nil
 }
 
-//Parse decode string to Header model
+// Parse decode string to Header model
 func (v *Header) Parse(b []byte) error {
 	vv := buffer(b)
 
