@@ -8,7 +8,7 @@
 ## Install
 
 ```sh
-go get -u github.com/osspkg/go-archives
+go get -u go.osspkg.com/archives
 ```
 
 ## Archives

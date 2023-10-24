@@ -17,8 +17,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/osspkg/go-archives/ar"
 	"github.com/stretchr/testify/require"
+	"go.osspkg.com/archives/ar"
 )
 
 const demoDeb = "ITxhcmNoPgpkZWJpYW4tYmluYXJ5ICAgMTY0NTMxODYwMSAgMCAgICAgMCAgICAgMTAwNjQ0ICA0ICAgICAgICAgYAoyLjAKY29" +
