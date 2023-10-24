@@ -8,8 +8,8 @@ package ar_test
 import (
 	"testing"
 
-	"github.com/osspkg/go-archives/ar"
 	"github.com/stretchr/testify/require"
+	"go.osspkg.com/archives/ar"
 )
 
 func TestUnit_NewBuffer(t *testing.T) {

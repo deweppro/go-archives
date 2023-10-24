@@ -1,4 +1,4 @@
-module github.com/osspkg/go-archives
+module go.osspkg.com/archives
 
 go 1.17
 
